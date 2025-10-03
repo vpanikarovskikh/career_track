@@ -1,14 +1,15 @@
+<script>
 <%
-activeTracks = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = true");
-for(track in activeTracks){
-    activeTrack = track;
-}
+%>console.log(<%=curUserID%>);<%
+
+activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = 'true'"));
 
 tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
-// competences = XQuery("sql: SELECT * FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = kt AND t.track_id = '" + activeTrack.track_id + "'");
+competenceses = XQuery("sql: SELECT DISTINCT name FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' ");
+%>console.log(<%=ArrayCount(competenceses)%>);<%
 
-allCompetences = XQuery("sql: SELECT * FROM dbo.competences WHERE code = kt");
+allCompetences = XQuery("sql: SELECT * FROM dbo.competences WHERE code = 'kt'");
 thisCompetences = XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + activeTrack.track_id + "'");
 collabCompetences = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = '" + activeTrack.id + "'");
 
@@ -60,40 +61,52 @@ function drawTabs()
 function drawModules()
 {
     modules = "";
-    tempCompetence = null;
-    competenceName = "";
-    competencePercent = "";
+    // tempCompetence = null;
+    // competenceName = "";
+    // competencePercent = "";
 
-    for(competence in thisCompetences){
-        if(competence != tempCompetence){
-            for(allCompetence in allCompetences){
-                if(allCompetence.id == competence.competence_id){
-                    competenceName = allCompetence.name;
-                    break;
-                }
-            }
-            for(collabCompetence in collabCompetences){
-                if(collabCompetence.competence_id == competence.competence_id){
-                    competencePercent = collabCompetence.percent;
-                    break;
-                }
-            }
-            modules += '<div class="module">
-                <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
-                <div class="module-content">
-                    <div class="module-title">' + competenceName + '</div>
-                </div>
-                <div class="module-progress">' + competencePercent + '</div>
-            </div>';
-        }
+    // for(competence in thisCompetences){
+    //     if(competence != tempCompetence){
+    //         for(allCompetence in allCompetences){
+    //             if(allCompetence.id == competence.competence_id){
+    //                 competenceName = allCompetence.name;
+    //                 break;
+    //             }
+    //         }
+    //         for(collabCompetence in collabCompetences){
+    //             if(collabCompetence.competence_id == competence.competence_id){
+    //                 competencePercent = collabCompetence.percent;
+    //                 break;
+    //             }
+    //         }
+    //         modules += '<div class="module">
+    //             <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
+    //             <div class="module-content">
+    //                 <div class="module-title">' + competenceName + '</div>
+    //             </div>
+    //             <div class="module-progress">' + competencePercent + '</div>
+    //         </div>';
+    //     }
 
-        tempCompetence = competence;
+    //     tempCompetence = competence;
+    // }
+
+    // return modules;
+
+    for(c in competenceses){
+        modules += '<div class="module">
+            <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
+            <div class="module-content">
+                <div class="module-title">' + c.name + '</div>
+            </div>
+            <div class="module-progress">' + 0 + '</div>
+        </div>';
     }
 
     return modules;
 }
 %>
-
+</script>
 <style>
 
     :root {
@@ -374,7 +387,7 @@ function drawModules()
             <%=drawModules()%>
         </div>
 
-        <div class="modules">
+        <!-- <div class="modules">
             <div class="module">
                 <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
                 <div class="module-content">
@@ -382,7 +395,7 @@ function drawModules()
                 </div>
                 <div class="module-progress">0%</div>
             </div>
-        </div>
+        </div> -->
 
         <div class="sections">
             <div class="section">

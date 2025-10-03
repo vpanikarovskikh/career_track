@@ -1,0 +1,795 @@
+<%
+    collabTracks = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "'");
+    collabTracksCount = ArrayCount(collabTracks);
+
+    active_track = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND main_or_not = true"));
+    tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
+    startTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = 1"));
+    descriptions = ["Вы освоите все тонкости сделок: от юридических аспектов до техник продаж и маркетинга. Вы узнаете, как строить базу клиентов, вести переговоры и успешно закрывать сделки.", "Вы хотите быть успешным риелтором и при этом уделять достаточно времени семье? Этот карьерный трек покажет, как эффективно управлять своим временем и ресурсами.", "Вы уже добились успеха в сфере недвижимости, но чувствуете, что пора двигаться дальше? Этот трек создан для тех, кто готов выйти на новый уровень и освоить передовые стратегии рынка.", "Готовы переосмыслить свой потенциал и достичь новых вершин? Этот трек — ваш ключ к будущему в недвижимости. Обучайтесь сегодня, чтобы не просто работать на рынке, а определять его правила!"];
+
+    function courseCount(track_id)
+    {
+        count = ArrayCount(XQuery("sql: SELECT * FROM career_tracks.courses_from_tracks WHERE track_id = '" + track_id + "'"))
+        return ('<span>' + count + ' обучений</span>');
+    }
+
+    function defineExperience(track_id)
+    {
+        exp = "";
+        if(track_id == 1 || track_id == 5 || track_id == 6 || track_id == 7){
+            exp += '<span>0-6 месяцев</span>';
+        }
+        else{
+            exp += '<span>6+ месяцев</span>';
+        }
+
+        return exp;
+    }
+
+    function defineActiveTrackName(track_id)
+    {
+        name = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.tracks WHERE id = '" + track_id + "'"));
+        return ('<h3 class="card-title">«' + name.name + '»</h3>');
+    }
+
+    function defineActiveTrackPicture(track_id)
+    {
+        picture = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.tracks WHERE id = '" + track_id + "'"));
+        return ('<img src="http://education-test.etagi.com/download_file.html?file_id=' + picture.big_image + '">');
+    }
+
+    function defineButtonText(track_id)
+    {
+        buttonText = "";
+        trackPercent = null;
+        isActive = false;
+
+        trackPercents = XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'");
+        for(track in trackPercents){
+            trackPercent = track.percent;
+            if(track.track_id == active_track.track_id){ isActive = true; }
+        }
+
+        if(isActive)
+        {
+            if(trackPercent == 100){
+                buttonText += '<button class="start-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
+            }
+            else{
+                buttonText += '<button class="start-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)"> Продолжить</button>';
+            }
+        }
+        else
+        {
+            if(trackPercent == 0 || (trackPercent > 0 && trackPercent < 100)){
+                buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Продолжить</button>';
+            }
+            else if(trackPercent == 100){
+                buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Просмотреть трек</button>';
+            }
+            else if(startTrack.percent < 100){
+                buttonText += '<button class="sidebar-button" title="Пройдите «Старт в недвижимости», чтобы открыть трек">Начать</button>'
+            }
+            else if(trackPercent == null){
+                buttonText += '<button class="sidebar-button" onclick="window.open(`http://education-test.etagi.com/_wt/career_track`, `_self`)">Начать</button>'
+            }
+        }
+
+        return buttonText;
+    }
+
+    function drawMainCard(){
+
+        mainCard = "";
+
+        if(collabTracksCount > 0){
+            mainCard += '
+            <div class="main-card">' + defineActiveTrackPicture(active_track.track_id) + '
+                <a href="http://education-test.etagi.com/_wt/career_track"></a>
+                <div class="progress-bar">
+                    <div class="percent">' + active_track.percent + '%</div>
+                    <div class="progress" id="progress" style="width: ' + active_track.percent + '%"></div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-point">
+                            <img src="https://i.ibb.co/SwRnfFPX/image.png" alt="a">'
+                            + defineExperience() + '
+                        </div>
+                        <div class="card-point" id="start-track">
+                            <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">'
+                            + courseCount(1) + '
+                        </div>
+                    </div>'
+                    + defineActiveTrackName(active_track.track_id) + '
+                    <p class="card-text">' + descriptions[active_track.track_id - 1] + '</p>
+                    <div class="main-button">'
+                        + defineButtonText(active_track.track_id) + '
+                    </div>
+                </div>
+            </div>';
+        }
+        else{
+            mainCard += '
+            <div class="main-card">
+                <img src="http://education-test.etagi.com/download_file.html?file_id=7556131593364382624" alt="Старт в недвижимости">
+                <div class="progress-bar">
+                    <div class="percent">0%</div>
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="card-point">
+                            <img src="https://i.ibb.co/SwRnfFPX/image.png" alt="a">'
+                            + defineExperience(1) + '
+                        </div>
+                        <div class="card-point" id="start-track">
+                            <img src="https://i.ibb.co/9HTD4qpB/image.png" alt="a">'
+                            + courseCount(1) + '
+                        </div>
+                    </div>
+                    <h3 class="card-title">«Старт в недвижимости»</h3>
+                    <p class="card-text">Вы быстро освоите все тонкости профессии: от юридических аспектов сделок с
+                        недвижимостью до эффективных техник продаж и маркетинга. Вы узнаете, как строить базу
+                        клиентов, вести переговоры и успешно закрывать сделки.</p>
+                    <div class="main-button">
+                        <button class="start-button" id="open">Начать</button>
+                    </div>
+                </div>
+            </div>';
+        }
+
+        return mainCard;
+    }
+
+    function drawProgressBar(track_id){
+        sideBarProgress = "";
+        currTrack = null;
+
+        currTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs_tracks WHERE collab_id = '" + curUserID + "' AND track_id = '" + track_id + "'"));
+
+        if(startTrack.percent == 100 && currTrack != undefined){
+            sideBarProgress += '<div class="sidebar-progressbar">
+                <div class="sidebar-percent" id="progress">' + currTrack.percent + '%</div>
+                <div class="sidebar-progress" style="width:' + currTrack.percent + '%"></div>
+            </div>';
+        }
+        else if(startTrack.percent == 100 && currTrack == undefined){
+            sideBarProgress += '<div class="sidebar-progressbar">
+                <div class="sidebar-percent">0%</div>
+                <div class="sidebar-progress"></div>
+            </div>';
+        }
+        else{
+            sideBarProgress = null;
+        }
+
+        return sideBarProgress;
+    }
+
+    function drawSidebar(){
+
+        sidebarCards = "";
+
+        if(collabTracksCount > 0){
+            for(track in tracks){
+                if(track.id != active_track.track_id && track.id != 5 && track.id != 6 && track.id != 7){
+                    sidebarCards += '
+                    <div class="sidebar-card">
+                        <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
+                        <div class="sidebar-content">
+                            <div class="sidebar-header">
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/SwRnfFPX/image.png">'
+                                    + defineExperience() + '
+                                </div>
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/9HTD4qpB/image.png">'
+                                    + courseCount(track.id) + '
+                                </div>
+                            </div>
+                            <div class="sidebar-titlebody">
+                                <h3 class="sidebar-title">«' + track.name + '»</h3>'
+                                + drawProgressBar(track.id) + '                       
+                                </div>
+                            <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
+                            <div class="secondary-button">'
+                                + defineButtonText(track.id) + '
+                            </div>
+                        </div>
+                    </div>'
+                }
+            }
+        }
+        else{
+            for(track in tracks){
+                if(track.id != 1 && track.id != 5 && track.id != 6 && track.id != 7){
+                    sidebarCards += ' 
+                    <div class="sidebar-card">
+                        <img src="http://education-test.etagi.com/download_file.html?file_id=' + track.image + '">
+                        <div class="sidebar-content">
+                            <div class="sidebar-header">
+                                <div class="sidebar-point">
+                                    <img src="https://i.ibb.co/SwRnfFPX/image.png">
+                                    <span>6+ месяцев</span>
+                                </div>
+                                <div class="sidebar-point">
+                                <img src="https://i.ibb.co/9HTD4qpB/image.png">'
+                                + courseCount(track.id) + '
+                                </div>
+                            </div>
+                            <h3 class="sidebar-title">«' + track.name + '»</h3>
+                            <p class="sidebar-text">' + descriptions[track.id-1] + '</p>
+                            <div class="secondary-button">
+                                <button class="sidebar-button">Начать</button>
+                            </div>
+                        </div>
+                    </div>'                    
+                }
+                else{
+                    continue;
+                }
+            }
+        }
+
+        return sidebarCards;
+    }
+%>
+
+<style>
+    :root {
+        --tiles_gap: 20px;
+        --card_color: #fff;
+        --tile_border_radius: 16px;
+        --custom_box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+        --progress-bar_color: #EBEBEB;
+        --progress_color: #B9D2B8;
+        --text_standart_size: 14px;
+        --text_standart_color: #000;
+        --text_header_size: 20px;
+        --button_color: #2C3979;
+        --button_hover_color: #202A59;
+        --button_font_size: 18px;
+        --button_text_color: #fff;
+        --button_font_weight: bold;
+        --point_font_weight: 500;
+        --point_font_style: italic;
+        --sidebar_card_color: #F2F2F2;
+        --sidebar_standart_text_size: 12px;
+    }
+
+    .container {
+        margin: 40px 60px 0px 350px;
+        display: flex;
+        justify-content: center;
+        gap: var(--tiles_gap);
+        flex-direction: row;
+    }
+
+    .main-card-wrapper {
+        display: flex;
+        width: 600px;
+    }
+
+    .main-card {
+        background-color: var(--card_color);
+        border-radius: var(--tile_border_radius);
+        box-shadow: var(--custom_box-shadow);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .main-card a {
+        
+    }
+
+    .main-card img {
+        width: 600px;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .progress-bar {
+        height: 40px;
+        background-color: var(--progress-bar_color);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress {
+        height: 100%;
+        background-color: var(--progress_color);
+        width: 0;
+        position: absolute;
+        z-index: 1;
+    }
+
+    .percent {
+        text-align: center;
+        font-size: var(--text_standart_size);
+        color: var(--text_standart_color);
+        position: absolute;
+        left: 50%;
+        top: 10%;
+        z-index: 2;
+    }
+
+    .card-content {
+        padding: 20px 40px 20px 40px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        color: var(--text_standart_color);
+        font-weight: var(--point_font_weight);
+        font-style: var(--point_font_style);
+    }
+
+    .card-point {
+        display: flex;
+        gap: 10px;
+    }
+
+    .card-point img {
+        width: 20px;
+        height: 20px;
+    }
+
+    .card-title {
+        color: var(--text_standart_color);
+        font-size: var(--text_header_size);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .card-text {
+        font-size: var(--text_standart_size);
+        line-height: 1.5;
+        margin-bottom: 15px;
+        color: var(--text_standart_color);
+    }
+
+    .main-button {
+        display: flex;
+        justify-content: center;
+    }
+
+    .start-button {
+        background-color: var(--button_color);
+        color: var(--button_text_color);
+        border: none;
+        padding: 10px;
+        border-radius: 12px;
+        font-size: var(--button_font_size);
+        font-weight: var(--button_font_weight);
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .start-button:hover {
+        background-color: var(--button_hover_color);
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: var(--tiles_gap);
+        width: 600px;
+    }
+
+    .sidebar-card{
+        border-radius: var(--tile_border_radius);
+        box-shadow: var(--custom_box-shadow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: row;
+        position: relative;
+        <%if(collabTracksCount==0){%>background-color: var(--sidebar_card_color);<%}else if(startTrack.percent == 100){%>background-color: var(--card_color);<%}%>
+    }
+
+    .sidebar img {
+        width: 200px;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .sidebar-content {
+        padding: 15px 20px 10px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 14px;
+        color: var(--text_standart_color);
+        margin-bottom: 20px;
+        font-weight: var(--point_font_weight);
+        font-style: var(--point_font_style);
+    }
+
+    .sidebar-point {
+        display: flex;
+        gap: 10px;
+    }
+
+    .sidebar-header img {
+        width: 16px;
+        height: 16px;
+    }
+
+    .sidebar-titlebody {
+        display: flex;
+        flex-direction: row;
+        gap: 40px;       
+    }
+
+    .sidebar-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text_standart_color);
+        margin: 0;
+    }
+
+    .sidebar-progressbar {
+        height: 15px;
+        width: 170px;
+        background-color: var(--progress-bar_color);
+        overflow: hidden;
+        border-radius: 8px;
+        margin-top: 3px;
+        margin-left: auto;     
+        position: relative;          
+    }
+
+    .sidebar-progress {
+        height: 100%;
+        background-color: var(--progress_color);
+        width: 0;
+        position: absolute;
+        z-index: 1;
+    }
+
+    .sidebar-percent {
+        text-align: center;
+        font-size: 10px;
+        color: var(--text_standart_color);
+        position: absolute;
+        left: 50%;
+        z-index: 2;
+    }
+
+    .sidebar-text {
+        font-size: var(--sidebar_standart_text_size);
+        line-height: 1.4;
+        color: var(--text_standart_color);
+        margin-bottom: 10px;
+    }
+
+    .secondary-button {
+        display: flex;
+        justify-content: right;
+    }
+
+    .sidebar-button {
+        background-color: #898989;
+        color: #C7C7C7;
+        border: none;
+        padding: 7px 9px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: not-allowed;
+        text-align: center;
+        <%if(collabTracksCount==0){%>background-color: #898989; color: #C7C7C7;<%}else if(startTrack.percent == 100){%>background-color: var(--button_color); color: #fff; cursor: pointer;<%}%>
+    }
+
+    .sidebar-button:hover {
+        background-color: #898989;
+        color: #C7C7C7;
+        <%if(collabTracksCount==0){%>background-color: #898989; color: #C7C7C7;<%}else if(startTrack.percent == 100){%>background-color: var(--button_hover_color); color: #fff;<%}%>
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal {
+        background-color: white;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        position: relative;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-title {
+        font-size: 32px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 20px;
+        color: var(--text_standart_color);
+    }
+
+    .modal-content {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .option-card {
+        flex: 1;
+        min-width: 200px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .option-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .option-image {
+        width: 100%;
+        object-fit:fill;
+    }
+
+    .option-text {
+        padding: 0 20px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        color: var(--text_standart_color);
+        font-weight: bold;
+    }
+
+    .option-btn {
+        padding: 10px 20px;
+        display: inline-block;
+        background-color: var(--button_color);
+        color: white;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+        font-size: 16px;
+        border: none;
+        margin-bottom: 15px;
+    }
+
+    .option-btn:hover {
+        background-color: var(--button_hover_color);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 0;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #000;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+        background-color: var(--button_color);
+        color: #fff;
+    }
+
+    @media (max-width: 500px) {
+
+        :root {
+            --text_standart_size: 10px;
+            --text_header_size: 16px;
+            --button_font_size: 14px;
+            --sidebar_standart_text_size: 8px;
+        }
+
+        .container {
+        margin: 20px 10px 0 50px;
+        flex-direction: column;
+        gap: 14px;
+        }
+
+        .main-card-wrapper {
+        width: 330px;
+        }
+
+        .main-card a {
+            
+        }
+
+        .main-card img {
+        width: 330px;
+        height: 100%;
+        object-fit: cover;
+        }
+
+        .progress-bar {
+        height: 30px;
+        }
+
+        .percent {
+            opacity: 0;
+        }
+
+        .card-content {
+            padding: 10px 20px 10px 20px;
+        }
+
+        .card-point {
+            gap: 5px;
+        }
+
+        .card-point img {
+        width: 14px;
+        height: 14px;
+        }
+
+        .card-header {
+        font-size: 10px;
+        margin-bottom: 14px;
+        }
+
+        .card-text {
+        margin-bottom: 4px;
+        }
+
+        .start-button {
+            display: none;
+        }
+
+        .sidebar {
+            width: 330px;
+            gap: 14px;
+        }
+
+        .sidebar img {
+            width: 110px;
+        }
+
+        .sidebar-content {
+            padding: 10px 15px 5px 15px;
+        }
+
+        .sidebar-header {
+            font-size: 10px;
+            margin-bottom: 14px;
+        }
+
+        .sidebar-point {
+            gap: 6px;
+        }
+
+        .sidebar-header img {
+            width: 12px;
+            height: 12px;
+        }
+
+        .sidebar-titlebody {
+            gap: 20px;       
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-progressbar {
+            height: 10px;
+            width: 80px;
+            border-radius: 8px;
+            margin-top: 2px;       
+        }
+
+        .sidebar-percent {
+            opacity: 0;
+        }
+
+        .sidebar-button {
+            display: none;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="main-card-wrapper">
+        <%=drawMainCard()%>
+    </div>
+    <div class="sidebar">
+        <%=drawSidebar()%>
+    </div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <button class="close-btn">×</button>
+        <h2 class="modal-title">Укажите свой опыт в нашей компании</h2>
+        <div class="modal-content">
+            <div class="option-card">
+                <img src="https://i.ibb.co/MkKp4N7M/Group-87.png" alt="Новичок" class="option-image">
+                <p class="option-text">Стаж: 0-6 месяцев</p>
+                <button class="option-btn" onclick="window.open('http://education-test.etagi.com/_wt/career_track', _self)">Я новичок!</button>
+            </div>
+            <div class="option-card">
+                <img src="https://i.ibb.co/HLvDNpcs/Group-89.png" alt="Опытный" class="option-image">
+                <p class="option-text">Стаж: 6+ месяцев</p>
+                <button class="option-btn" id="skilled_btn">Я опытный!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const openBtn = document.getElementById('open');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const closeBtn = document.querySelector('.close-btn');
+
+    openBtn.addEventListener('click', () => {
+        modalOverlay.classList.add('active');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modalOverlay.classList.remove('active');
+    });
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.classList.remove('active');
+        }
+    });
+</script>

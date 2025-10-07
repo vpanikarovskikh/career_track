@@ -7,7 +7,7 @@ activeTrack = ArrayOptFirstElem(XQuery("sql: SELECT * FROM career_tracks.collabs
 tracks = XQuery("sql: SELECT * FROM career_tracks.tracks");
 
 competenceCourses = XQuery("sql: SELECT DISTINCT c.name, t.course_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' ");
-uniqueCompetencesNames = XQuery("sql: SELECT DISTINCT c.name FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' ");
+uniqueCompetencesNames = XQuery("sql: SELECT DISTINCT c.name, MIN(c.id) AS competence_id FROM dbo.competences AS c JOIN career_tracks.courses_from_tracks AS t ON c.id = t.competence_id WHERE c.code = 'kt' AND t.track_id = '" + activeTrack.track_id + "' GROUP BY c.name");
 %>console.log(<%=ArrayCount(uniqueCompetencesNames)%>);<%
 
 allCompetences = XQuery("sql: SELECT * FROM dbo.competences WHERE code = 'kt'");
@@ -15,14 +15,13 @@ thisCompetencesCourses = XQuery("sql: SELECT * FROM career_tracks.courses_from_t
 collabCompetences = XQuery("sql: SELECT * FROM career_tracks.collab_competences WHERE collabs_tracks_id = '" + activeTrack.id + "'");
 %>console.log(<%=ArrayCount(thisCompetencesCourses)%>);<%
 
-descriptions = ["Вы быстро освоите все тонкости профессии: от юридических аспектов сделок с недвижимостью до эффективных техник продаж и маркетинга. Вы узнаете, как строить базу клиентов, вести переговоры и успешно закрывать сделки.", "Вы хотите быть успешным риелтором и при этом уделять достаточно времени семье? Этот карьерный трек покажет, как эффективно управлять своим временем и ресурсами gfdgdfgdfgdfgdfgfdgdgdgdgdgdgdfgdfgdfgdg.", "Вы уже добились успеха в сфере недвижимости, но чувствуете, что пора двигаться дальше? Этот трек создан для тех, кто готов выйти на новый уровень и освоить передовые стратегии рынка.", "Готовы переосмыслить свой потенциал и достичь новых вершин? Этот трек — ваш ключ к будущему в недвижимости. Обучайтесь сегодня, чтобы не просто работать на рынке, а определять его правила!"];
 
 function drawHead()
 {
     head = "";
 
     for(track in tracks){
-        if(track.id == activeTrack.track_id){trackName = track.name; trackDesc = descriptions[track.id-1];}
+        if(track.id == activeTrack.track_id){trackName = track.name; trackDesc = track.description;}
     }
 
     head += '<div class="head">
@@ -96,7 +95,8 @@ function drawModules()
     // return modules;
 
     for(c in uniqueCompetencesNames){
-        modules += '<div class="module">
+        competence_id = "'" + c.competence_id + "'";
+        modules += '<div class="module" onclick="document.querySelector(`[data-id='+ competence_id +']`).scrollIntoView({behavior: `smooth`, block: `start`})">
             <img src="http://education.etagi.com/download_file.html?file_id=7546507309267187449">
             <div class="module-content">
                 <div class="module-title">' + c.name + '</div>
@@ -112,7 +112,7 @@ function drawCourses()
 {
     coursesBlock = "";
     for(competence in uniqueCompetencesNames){
-        coursesBlock += '<div class="section">
+        coursesBlock += '<div class="section" data-id='+ competence.competence_id +'>
                             <div class="section-bar">
                                 <div class="section-title">'+ competence.name +'</div>
                             </div>
